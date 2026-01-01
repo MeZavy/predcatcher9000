@@ -1,4 +1,4 @@
--- [[ PRED CATCHER 9000: UNIVERSAL ACRYLIC ]] --
+-- [[ PRED CATCHER 9000: UNIVERSAL PERSISTENT ]] --
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
@@ -6,15 +6,16 @@ local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 
--- Persistence Logic for any Executor
-local teleportScript = [[loadstring(game:HttpGet("https://pastebin.com/raw/k32aZXWH"))()]]
+-- PERSISTENCE: This part ensures it loads after you server hop
+local rawScript = "https://raw.githubusercontent.com/MeZavy/predcatcher9000/main/script.lua"
+local teleportScript = [[loadstring(game:HttpGet("]]..rawScript..[["))()]]
 
 local queue = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
 if queue then
     queue(teleportScript)
 end
 
--- Configuration
+-- Configuration: Suspicious Word List
 local FlaggedWords = {
     "moan", "daddy", "daddi", "submissive", "breed", "ahhh", "harder", "mami", "dada", "papi", 
     "mistress", "kneel", "good girl", "good boy", "kitten", "discord?", "disc", "snap?", 
@@ -25,7 +26,7 @@ local FlaggedWords = {
 local AllLogs = {} 
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PredCatcher_Universal"
+ScreenGui.Name = "PredCatcher_V12"
 ScreenGui.Parent = (gethui and gethui()) or CoreGui
 
 -- Main Acrylic Frame
@@ -59,7 +60,7 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = MainFrame
 
--- Control Buttons
+-- Controls (No BG)
 local Controls = Instance.new("Frame")
 Controls.Size = UDim2.new(0, 180, 0, 50)
 Controls.Position = UDim2.new(1, -185, 0, 0)
@@ -91,7 +92,7 @@ IYBtn.MouseButton1Click:Connect(function()
 end)
 
 SaveBtn.MouseButton1Click:Connect(function()
-    local write = writefile or (appendfile)
+    local write = writefile or appendfile
     if write then
         local content = table.concat(AllLogs, "\n")
         write("PredLogs_" .. os.date("%H%M") .. ".txt", content)
@@ -103,7 +104,7 @@ end)
 
 HopBtn.MouseButton1Click:Connect(function()
     local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"))
-    for i, v in pairs(Servers.data) do
+    for _, v in pairs(Servers.data) do
         if v.playing < v.maxPlayers and v.id ~= game.JobId then
             TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
             break
@@ -121,7 +122,7 @@ end)
 
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
--- Scrolling Area
+-- Logs Area
 local ScrollFrame = Instance.new("ScrollingFrame")
 ScrollFrame.Size = UDim2.new(1, -25, 1, -75)
 ScrollFrame.Position = UDim2.new(0, 12, 0, 65)
@@ -135,7 +136,7 @@ Layout.Parent = ScrollFrame
 Layout.SortOrder = Enum.SortOrder.LayoutOrder
 Layout.Padding = UDim.new(0, 8)
 
--- Log Logic
+-- Chat Handling
 local function CreateLog(player, message)
     table.insert(AllLogs, "[" .. os.date("%H:%M:%S") .. "] " .. player.Name .. ": " .. message)
     
@@ -169,7 +170,7 @@ local function CreateLog(player, message)
     Content.TextWrapped = true
     Content.Parent = LogBtn
 
-    -- Right Click Instant TP
+    -- Instant TP on Right-Click
     LogBtn.MouseButton2Click:Connect(function()
         if player.Character then
             LocalPlayer.Character:PivotTo(player.Character:GetPivot() * CFrame.new(0, 0, 3))
@@ -180,7 +181,7 @@ local function CreateLog(player, message)
     ScrollFrame.CanvasPosition = Vector2.new(0, 99999)
 end
 
--- Final Hooks
+-- Hooking
 local function hook(p)
     if p == LocalPlayer then return end
     p.Chatted:Connect(function(m) CreateLog(p, m) end)
